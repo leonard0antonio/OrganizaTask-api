@@ -1,115 +1,143 @@
-# 🚀 Task Manager API
+# ⚙️ OrganizaTask API (Back-end)
 
-Uma API robusta para Gerenciamento de Tarefas desenvolvida com **Node.js**, **TypeScript** e **Prisma**. O sistema permite a criação de contas, autenticação segura via JWT, gestão de equipas e controlo de tarefas com diferentes níveis de acesso (Admin e Membro).
+> Uma API RESTful multi-tenant construída para o ecossistema OrganizaTask, oferecendo gestão de demandas, isolamento de dados por workspace e controle de acesso baseado em cargos (RBAC).
 
----
-
-## 🛠 Tecnologias Utilizadas
-
-- **Runtime:** [Node.js](https://nodejs.org/)
-- **Linguagem:** [TypeScript](https://www.typescriptlang.org/)
-- **Framework Web:** [Express.js](https://expressjs.com/)
-- **ORM:** [Prisma](https://www.prisma.io/)
-- **Banco de Dados:** [PostgreSQL](https://www.postgresql.org/)
-- **Autenticação:** [JWT (JSON Web Token)](https://jwt.io/) & [BcryptJS](https://github.com/dcodeIO/bcrypt.js)
-- **Validação:** [Zod](https://zod.dev/)
-- **Testes:** [Jest](https://jestjs.io/)
-- **Containerização:** [Docker](https://www.docker.com/)
-- **Deploy:** [Render](https://render.com/)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ---
 
-## 📋 Funcionalidades
+## 🎯 Arquitetura e Funcionalidades Principais
 
-### Autenticação e Autorização
-- Registro de usuários e login com geração de Token JWT.
-- Níveis de acesso: **Admin** (gestão total) e **Member** (gestão de tarefas atribuídas).
-
-### Gerenciamento de Equipas
-- Apenas Administradores podem criar e editar equipas.
-- Vinculação de membros a equipas específicas.
-
-### Tarefas
-- CRUD completo de tarefas.
-- Classificação por **Status** (Pendente, Em Progresso, Concluído).
-- Classificação por **Prioridade** (Alta, Média, Baixa).
-- Histórico automático de alterações de status.
+* **Arquitetura Multi-Tenant:** Isolamento absoluto de dados. Membros só têm acesso às tarefas e times do Workspace do qual fazem parte.
+* **Autenticação Segura:** Autenticação via JWT (JSON Web Tokens) com senhas criptografadas via bcrypt.
+* **Controle de Acesso (RBAC):**
+  * `Admin`: Gestão total do Workspace, criação de times, registro de membros e visão global das demandas.
+  * `Member`: Visão isolada, com acesso exclusivo às tarefas atribuídas a si ou abertas para o seu Squad.
+* **ORM Moderno:** Utilização do Prisma ORM para queries tipadas, seguras e migrações ágeis.
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 📊 Modelo Entidade-Relacionamento (MER)
+
+Abaixo está a representação da arquitetura de banco de dados do projeto, destacando o auto-relacionamento da tabela `User` que viabiliza a regra de negócio do Workspace.
+
+```mermaid
+erDiagram
+    USER ||--o{ USER : "gerencia (adminId)"
+    USER ||--o{ TASK : "é responsável por (assigned_to)"
+    USER ||--o{ TASK : "cria para o workspace (adminId)"
+    TEAM ||--o{ TASK : "possui (team_id)"
+    
+    USER {
+        int id PK
+        string name
+        string email
+        string password
+        string role "admin | member"
+        int adminId FK "Nullable (Auto-relacionamento)"
+        datetime created_at
+    }
+    
+    TEAM {
+        int id PK
+        string name
+        datetime created_at
+    }
+    
+    TASK {
+        int id PK
+        string title
+        string description
+        string priority "high | medium | low"
+        string status "pending | in_progress | completed"
+        int adminId FK "Workspace Link"
+        int team_id FK
+        int assigned_to FK "Nullable"
+        datetime created_at
+    }
+
+```
+
+---
+
+## 🚀 Como executar o projeto localmente
 
 ### Pré-requisitos
-- Node.js instalado.
-- Docker e Docker Compose (opcional, para o banco de dados).
 
-### 1. Clonar o Repositório
+* Node.js v18+
+* Instância do PostgreSQL (Local ou Nuvem via Supabase)
+
+### Instalação
+
+1. Clone este repositório:
+
 ```bash
-git clone [https://github.com/teu-usuario/task-manager-api.git](https://github.com/teu-usuario/task-manager-api.git)
+git clone [https://github.com/leonard0antonio/task-manager-api.git](https://github.com/leonard0antonio/task-manager-api.git)
+
+```
+
+2. Acesse o diretório e instale as dependências:
+
+```bash
 cd task-manager-api
-```
-
-### 2. Instalar Dependências
-```bash
 npm install
+
 ```
 
-### 3. Configurar Variáveis de Ambiente
-Crie um ficheiro `.env` na raiz do projeto seguindo o exemplo:
+3. Configure as variáveis de ambiente em um arquivo `.env` na raiz do projeto:
+
 ```env
-DATABASE_URL="postgresql://admin:adminpassword@localhost:5433/taskmanager?schema=public"
-JWT_SECRET="sua_chave_secreta_aqui"
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/organizatask"
+JWT_SECRET="sua_chave_secreta_super_segura"
 PORT=3000
+
 ```
 
-### 4. Subir o Banco de Dados (Docker)
-```bash
-docker-compose up -d
-```
+4. Execute as migrações do Prisma para estruturar o banco de dados:
 
-### 5. Sincronizar o Banco com Prisma
 ```bash
+npx prisma generate
 npx prisma db push
+
 ```
 
-### 6. Executar o Servidor
+5. Inicie o servidor em modo de desenvolvimento:
+
 ```bash
 npm run dev
+
 ```
+
+A API estará disponível em `http://localhost:3000`.
 
 ---
 
-## 🧪 Testes Automatizados
-O projeto utiliza **Jest** para garantir a qualidade do código.
-```bash
-npm test
-```
+## 🌐 Deploy da Aplicação
 
----
+O ecossistema OrganizaTask está configurado para deploy contínuo utilizando as melhores práticas em infraestrutura serverless e edge:
 
-## 📡 API Endpoints (Exemplos)
-
-### Auth
-- `POST /api/auth/register` - Criar nova conta.
-- `POST /api/auth/login` - Autenticar usuário.
-
-### Teams
-- `POST /api/teams` - Criar equipa (Admin).
-- `POST /api/teams/:id/members` - Adicionar membro ao time (Admin).
-
-### Tasks
-- `GET /api/tasks` - Listar tarefas (conforme nível de acesso).
-- `POST /api/tasks` - Criar nova tarefa.
-- `PATCH /api/tasks/:id/status` - Atualizar status da tarefa.
-- `DELETE /api/tasks/:id` - Remover tarefa (Admin).
+* **Back-end:** Hospedado no [Render](https://render.com/).
+* **Front-end:** Hospedado na Vercel. *(Repositório do front-end não incluso aqui).*
 
 ---
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **Leonardo Antonio** *Estudante de Análise e Desenvolvimento de Sistemas | Full Stack Developer*
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/leonard0antonio" title="Leonardo Antonio">
+        <img src="https://avatars.githubusercontent.com/u/169267801?v=4" width="100px;" alt="Foto do leonardo no GitHub"/><br>
+        <sub>
+          <b>Leonardo Antonio</b>
+        </sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/leonardo-a-a063b519b/)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/leonard0antonio)
-
-*Este projeto foi desenvolvido como parte de um desafio técnico para consolidar conhecimentos em Backend, APIs RESTful e Testes.*
+```
