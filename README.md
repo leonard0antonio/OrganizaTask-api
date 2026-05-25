@@ -139,5 +139,3 @@ O ecossistema OrganizaTask está configurado para deploy contínuo utilizando as
     </td>
   </tr>
 </table>
-
-```
