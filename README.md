@@ -1,6 +1,7 @@
 # ⚙️ OrganizaTask API (Back-end)
 
-> Uma API RESTful multi-tenant construída para o ecossistema OrganizaTask, oferecendo gestão de demandas, isolamento de dados por workspace e controle de acesso baseado em cargos (RBAC).
+![Demo da aplicação](demo.png)
+
 
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
